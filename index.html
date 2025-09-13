@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>球衣設計工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .main-content {
+            display: flex;
+            min-height: 700px;
+        }
+        
+        .controls {
+            flex: 1;
+            padding: 30px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+        }
+        
+        .preview {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #cecece;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .control-group input:focus, .control-group select:focus {
+            border-color: #4ecdc4;
+            outline: none;
+        }
+        
+        .color-input {
+            height: 50px !important;
+            cursor: pointer;
+        }
+        
+        .jersey-container {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        .jersey {
+            width: 350px;
+            height: 400px;
+            position: relative;
+            margin: 0 auto;
+            transition: all 0.6s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .jersey.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .jersey-side {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+        }
+        
+        .back-side {
+            transform: rotateY(180deg);
+        }
+        
+        /* 球衣主體 */
+        .jersey-body {
+            width: 200px;
+            height: 280px;
+            position: absolute;
+            top: 50px;
+            left: 75px;
+            background: #000;
+            border-radius: 25PX 25PX 25px 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);            
+            /* border: 1px solid black; */
+
+        }
+        
+        /* 領口 */
+        .jersey-neck {
+            width: 80px;
+            height: 40px;
+            position: absolute;
+            top: 50px;
+            left: 135px;
+            background: #e91e63;
+            border-radius: 0 0 40px 40px;
+        }
+        
+        .jersey-neck-inner {
+            width: 60px;
+            height: 25px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #000;
+            border-radius: 0 0 30px 30px;
+        }
+        
+        /* 袖子 */
+        .jersey-sleeve {
+            width: 80px;
+            height: 150px;
+            position: absolute;
+            top: 35px;
+            background: #000;
+            border-radius: 20px;
+            /* border: 1px solid black; */
+
+        }
+        
+        .sleeve-left {
+            left: 33px;
+            TOP: 50px;
+            transform: rotate(40deg);
+        }
+        
+        .sleeve-right {
+            right: 33px;
+            top: 50px;
+            transform: rotate(-40deg);
+        }
+        
+        /* 袖口 */
+        .sleeve-cuff {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 25px;
+            background: #e91e63;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        /* 球衣紋理 */
+        .jersey-body::before,
+        .jersey-sleeve::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.03) 2px,
+                rgba(255,255,255,0.03) 3px
+            );
+            pointer-events: none;
+            border-radius: inherit;
+        }
+        
+        /* 文字和號碼 */
+        .jersey-sponsor {
+            position: absolute;
+            top: 60px;
+            right: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+        }
+        
+        .jersey-text {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            z-index: 10;
+            max-width: 160px;
+            line-height: 1.2;
+        }
+        
+        .jersey-number {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 70px;
+            font-weight: 900;
+            text-align: center;
+            color: white;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .jersey-name {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            z-index: 10;
+            max-width: 160px;
+        }
+        
+        .jersey-back-number {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 65px;
+            font-weight: 900;
+            text-align: center;
+            color: white;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .flip-button {
+            margin-top: 30px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .flip-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .export-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .export-button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ 球衣設計工具 ⚽</h1>
+            <p>阿阿阿阿阿阿</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="controls">
+                <div class="control-group">
+                    <label>球衣主色</label>
+                    <input type="color" id="jerseyColor" class="color-input" value="#000000">
+                </div>
+                
+                <div class="control-group">
+                    <label>文字顏色</label>
+                    <input type="color" id="textColor" class="color-input" value="#ffffff">
+                </div>
+                
+                <div class="control-group">
+                    <label>領口/袖口顏色</label>
+                    <input type="color" id="trimColor" class="color-input" value="#e91e63">
+                </div>
+                
+                <div class="control-group">
+                    <label>前面文字</label>
+                    <input type="text" id="frontText" value="隊伍名稱" maxlength="10">
+                </div>
+                
+                <div class="control-group">
+                    <label>球員姓名</label>
+                    <input type="text" id="playerName" value="NAME" maxlength="12">
+                </div>
+                
+                <div class="control-group">
+                    <label>號碼</label>
+                    <input type="number" id="jerseyNumber" value="20" min="0" max="99">
+                </div>
+                
+                <div class="control-group">
+                    <label>贊助商/品牌</label>
+                    <input type="text" id="sponsor" value="VCG" maxlength="8">
+                </div>
+                
+                <button class="export-button" onclick="exportDesign()">💾 匯出設計</button>
+            </div>
+            
+            <div class="preview">
+                <div class="jersey-container">
+                    <div class="jersey" id="jersey">
+                        <!-- 正面 -->
+                        <div class="jersey-side front-side">
+                            <!-- 左袖 -->
+                            <div class="jersey-sleeve sleeve-left" id="sleeveLeft">
+                                <div class="sleeve-cuff" id="sleeveCuffLeft"></div>
+                            </div>
+                            
+                            <!-- 右袖 -->
+                            <div class="jersey-sleeve sleeve-right" id="sleeveRight">
+                                <div class="sleeve-cuff" id="sleeveCuffRight"></div>
+                            </div>
+                            
+                            <!-- 主體 -->
+                            <div class="jersey-body" id="jerseyBody">
+                                <div class="jersey-sponsor" id="sponsor-display">VCG</div>
+                                <div class="jersey-text" id="frontTextDisplay">隊伍名稱</div>
+                                <div class="jersey-number" id="jerseyNumberDisplay">20</div>
+                            </div>
+                            
+                            <!-- 領口 -->
+                            <div class="jersey-neck" id="jerseyNeck">
+                                <div class="jersey-neck-inner"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 背面 -->
+                        <div class="jersey-side back-side">
+                            <!-- 左袖 -->
+                            <div class="jersey-sleeve sleeve-left" id="sleeveLeftBack">
+                                <div class="sleeve-cuff" id="sleeveCuffLeftBack"></div>
+                            </div>
+                            
+                            <!-- 右袖 -->
+                            <div class="jersey-sleeve sleeve-right" id="sleeveRightBack">
+                                <div class="sleeve-cuff" id="sleeveCuffRightBack"></div>
+                            </div>
+                            
+                            <!-- 主體 -->
+                            <div class="jersey-body" id="jerseyBodyBack">
+                                <div class="jersey-name" id="playerNameDisplay">NAME</div>
+                                <div class="jersey-back-number" id="jerseyBackNumberDisplay">20</div>
+                            </div>
+                            
+                            <!-- 領口 -->
+                            <div class="jersey-neck" id="jerseyNeckBack">
+                                <div class="jersey-neck-inner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="flip-button" onclick="flipJersey()">🔄 翻轉查看背面</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isFlipped = false;
+        
+        function updateJersey() {
+            const jerseyColor = document.getElementById('jerseyColor').value;
+            const textColor = document.getElementById('textColor').value;
+            const trimColor = document.getElementById('trimColor').value;
+            const frontText = document.getElementById('frontText').value;
+            const playerName = document.getElementById('playerName').value;
+            const jerseyNumber = document.getElementById('jerseyNumber').value;
+            const sponsor = document.getElementById('sponsor').value;
+            
+            // 更新正面顏色
+            document.getElementById('jerseyBody').style.background = jerseyColor;
+            document.getElementById('sleeveLeft').style.background = jerseyColor;
+            document.getElementById('sleeveRight').style.background = jerseyColor;
+            document.getElementById('jerseyNeck').style.background = trimColor;
+            document.getElementById('sleeveCuffLeft').style.background = trimColor;
+            document.getElementById('sleeveCuffRight').style.background = trimColor;
+            
+            // 更新正面文字
+            document.getElementById('frontTextDisplay').textContent = frontText;
+            document.getElementById('frontTextDisplay').style.color = textColor;
+            document.getElementById('jerseyNumberDisplay').textContent = jerseyNumber;
+            document.getElementById('jerseyNumberDisplay').style.color = textColor;
+            document.getElementById('sponsor-display').textContent = sponsor;
+            document.getElementById('sponsor-display').style.color = textColor;
+            
+            // 更新背面顏色
+            document.getElementById('jerseyBodyBack').style.background = jerseyColor;
+            document.getElementById('sleeveLeftBack').style.background = jerseyColor;
+            document.getElementById('sleeveRightBack').style.background = jerseyColor;
+            document.getElementById('jerseyNeckBack').style.background = trimColor;
+            document.getElementById('sleeveCuffLeftBack').style.background = trimColor;
+            document.getElementById('sleeveCuffRightBack').style.background = trimColor;
+            
+            // 更新背面文字
+            document.getElementById('playerNameDisplay').textContent = playerName;
+            document.getElementById('playerNameDisplay').style.color = textColor;
+            document.getElementById('jerseyBackNumberDisplay').textContent = jerseyNumber;
+            document.getElementById('jerseyBackNumberDisplay').style.color = textColor;
+        }
+        
+        function flipJersey() {
+            const jersey = document.getElementById('jersey');
+            const button = document.querySelector('.flip-button');
+            
+            isFlipped = !isFlipped;
+            
+            if (isFlipped) {
+                jersey.classList.add('flipped');
+                button.textContent = '🔄 翻轉查看正面';
+            } else {
+                jersey.classList.remove('flipped');
+                button.textContent = '🔄 翻轉查看背面';
+            }
+        }
+        
+        function exportDesign() {
+            const design = {
+                jerseyColor: document.getElementById('jerseyColor').value,
+                textColor: document.getElementById('textColor').value,
+                trimColor: document.getElementById('trimColor').value,
+                frontText: document.getElementById('frontText').value,
+                playerName: document.getElementById('playerName').value,
+                jerseyNumber: document.getElementById('jerseyNumber').value,
+                sponsor: document.getElementById('sponsor').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(design, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `jersey_design_${design.jerseyNumber}_${new Date().getTime()}.json`;
+            link.click();
+            
+            alert('🎉 設計已匯出成功！\n檔案包含所有顏色和文字設定。');
+        }
+        
+        // 監聽所有輸入變化
+        document.getElementById('jerseyColor').addEventListener('input', updateJersey);
+        document.getElementById('textColor').addEventListener('input', updateJersey);
+        document.getElementById('trimColor').addEventListener('input', updateJersey);
+        document.getElementById('frontText').addEventListener('input', updateJersey);
+        document.getElementById('playerName').addEventListener('input', updateJersey);
+        document.getElementById('jerseyNumber').addEventListener('input', updateJersey);
+        document.getElementById('sponsor').addEventListener('input', updateJersey);
+        
+        // 初始化
+        updateJersey();
+    </script>
+</body>
+</html>
